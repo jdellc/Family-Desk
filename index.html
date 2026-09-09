@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FamilyDesk — Nanny Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #16213e;
+  --ink-soft: #4a5568;
+  --ink-faint: #9099aa;
+  --bg: #f5f4f0;
+  --card: #ffffff;
+  --gold: #c9962a;
+  --gold-lt: #fef3d8;
+  --teal: #2d7dd2;
+  --teal-lt: #dbeeff;
+  --green: #1a9e6e;
+  --green-lt: #d2f5e8;
+  --border: rgba(22,33,62,.10);
+  --r: 14px;
+  --r-sm: 8px;
+  --sh: 0 2px 12px rgba(22,33,62,.07);
+  --sh-md: 0 6px 24px rgba(22,33,62,.10);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Figtree',sans-serif; background:var(--bg); color:var(--ink); min-height:100vh; }
+
+header {
+  background:var(--ink);
+  padding:0 28px;
+  height:60px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.logo { font-family:'Playfair Display',serif; font-size:20px; color:#fff; }
+.logo em { color:var(--gold); font-style:normal; }
+.sheet-btn {
+  padding:8px 18px;
+  background:var(--gold);
+  color:#fff;
+  border:none;
+  border-radius:20px;
+  font-family:'Figtree',sans-serif;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  transition:background .2s;
+}
+.sheet-btn:hover { background:#a87d1e; }
+
+main { max-width:900px; margin:0 auto; padding:28px 20px 60px; }
+
+/* Rate setting */
+.rate-bar {
+  background:var(--card);
+  border-radius:var(--r);
+  padding:16px 22px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  margin-bottom:22px;
+  box-shadow:var(--sh);
+  border:1px solid var(--border);
+  flex-wrap:wrap;
+}
+.rate-label { font-size:13px; font-weight:600; color:var(--ink-soft); }
+.rate-input {
+  width:90px;
+  padding:8px 12px;
+  border:1.5px solid var(--gold);
+  border-radius:var(--r-sm);
+  font-family:'Figtree',sans-serif;
+  font-size:15px;
+  font-weight:700;
+  color:var(--ink);
+  text-align:center;
+  outline:none;
+  background:var(--gold-lt);
+}
+.rate-note { font-size:12px; color:var(--ink-faint); flex:1; }
+
+/* Summary cards */
+.cards { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:24px; }
+.card {
+  background:var(--card);
+  border-radius:var(--r);
+  padding:20px;
+  box-shadow:var(--sh);
+  border:1px solid var(--border);
+}
+.card-label { font-size:10px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:8px; }
+.card-value { font-family:'Playfair Display',serif; font-size:32px; letter-spacing:-.02em; }
+.card-value.teal { color:var(--teal); }
+.card-value.green { color:var(--green); }
+.card-value.gold { color:var(--gold); }
+.card-sub { font-size:11px; color:var(--ink-faint); margin-top:4px; }
+
+/* Upload zone */
+.upload-card {
+  background:var(--card);
+  border-radius:var(--r);
+  border:2px dashed var(--border);
+  padding:36px;
+  text-align:center;
+  margin-bottom:22px;
+  box-shadow:var(--sh);
+  transition:border-color .2s;
+  cursor:pointer;
+  position:relative;
+}
+.upload-card:hover, .upload-card.drag { border-color:var(--gold); }
+.upload-card input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.upload-icon { font-size:36px; margin-bottom:12px; }
+.upload-title { font-size:16px; font-weight:700; color:var(--ink); margin-bottom:4px; }
+.upload-sub { font-size:13px; color:var(--ink-soft); }
+.upload-sub strong { color:var(--gold); }
+
+/* Shifts table */
+.shifts-section { display:none; }
+.shifts-section.visible { display:block; }
+.section-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:14px;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.section-title { font-family:'Playfair Display',serif; font-size:22px; color:var(--ink); }
+.action-row { display:flex; gap:8px; }
+.btn {
+  padding:9px 18px;
+  border-radius:var(--r-sm);
+  font-family:'Figtree',sans-serif;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+  border:none;
+  transition:all .15s;
+}
+.btn-primary { background:var(--ink); color:#fff; }
+.btn-primary:hover { background:var(--gold); }
+.btn-secondary { background:var(--green-lt); color:var(--green); border:1.5px solid var(--green); }
+.btn-secondary:hover { background:var(--green); color:#fff; }
+
+.week-group { margin-bottom:20px; }
+.week-header {
+  background:var(--ink);
+  color:#fff;
+  padding:10px 16px;
+  border-radius:var(--r-sm) var(--r-sm) 0 0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.week-title { font-size:13px; font-weight:700; }
+.week-meta { display:flex; align-items:center; gap:14px; }
+.week-hrs { font-size:12px; color:rgba(255,255,255,.6); }
+.week-pay { font-size:15px; font-weight:700; color:var(--gold); }
+.week-affirm {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:12px;
+  color:rgba(255,255,255,.7);
+  cursor:pointer;
+}
+.week-affirm input[type=checkbox] { width:15px; height:15px; accent-color:var(--green); cursor:pointer; }
+.week-affirm.affirmed { color:#6ee7b7; }
+
+table { width:100%; border-collapse:collapse; background:var(--card); border-radius:0 0 var(--r-sm) var(--r-sm); overflow:hidden; box-shadow:var(--sh); }
+thead tr { background:#f0f0f0; }
+th { padding:9px 14px; font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-soft); text-align:left; border-bottom:1px solid var(--border); }
+td { padding:11px 14px; font-size:13px; border-bottom:1px solid var(--border); }
+tbody tr:last-child td { border-bottom:none; }
+tbody tr:hover { background:#fafaf8; }
+.hrs-badge {
+  display:inline-block;
+  padding:3px 10px;
+  background:var(--teal-lt);
+  color:var(--teal);
+  border-radius:20px;
+  font-size:12px;
+  font-weight:700;
+}
+.pay-val { font-weight:700; color:var(--green); }
+
+/* Status */
+.status-bar {
+  padding:12px 18px;
+  border-radius:var(--r-sm);
+  font-size:13px;
+  font-weight:600;
+  margin-bottom:18px;
+  display:none;
+}
+.status-bar.info { background:var(--teal-lt); color:var(--teal); display:block; }
+.status-bar.success { background:var(--green-lt); color:var(--green); display:block; }
+.status-bar.error { background:#ffe4e1; color:#c0392b; display:block; }
+
+/* Toast */
+#toast {
+  position:fixed; bottom:24px; right:24px;
+  background:var(--ink); color:#fff;
+  padding:12px 18px; border-radius:var(--r-sm);
+  font-size:13px; font-weight:500;
+  opacity:0; transform:translateY(6px);
+  transition:opacity .3s, transform .3s;
+  pointer-events:none; z-index:99;
+}
+#toast.show { opacity:1; transform:translateY(0); }
+
+@media(max-width:600px) {
+  .cards { grid-template-columns:1fr 1fr; }
+  .cards .card:last-child { grid-column:1/-1; }
+  .week-meta { flex-wrap:wrap; gap:8px; }
+  header { padding:0 16px; }
+  main { padding:16px 12px 60px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">family<em>desk</em></div>
+  <a class="sheet-btn" id="sheet-link" href="#" target="_blank">📊 Open Google Sheet</a>
+</header>
+
+<main>
+
+  <!-- Rate bar -->
+  <div class="rate-bar">
+    <span class="rate-label">Hourly Rate:</span>
+    <span style="font-size:13px;color:var(--ink-faint)">$</span>
+    <input class="rate-input" id="rate-input" type="number" value="15" min="1" step="0.50">
+    <span class="rate-note">Change rate to update all projections below</span>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="cards">
+    <div class="card">
+      <div class="card-label">This Week — Projected</div>
+      <div class="card-value teal" id="card-this-week">$0.00</div>
+      <div class="card-sub" id="card-this-week-hrs">0 hrs scheduled</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Last Week — Hours</div>
+      <div class="card-value green" id="card-last-week">$0.00</div>
+      <div class="card-sub" id="card-last-week-hrs">0 hrs worked</div>
+    </div>
+    <div class="card">
+      <div class="card-label">This Month — Total</div>
+      <div class="card-value gold" id="card-month">$0.00</div>
+      <div class="card-sub" id="card-month-hrs">0 hrs this month</div>
+    </div>
+  </div>
+
+  <!-- Upload zone -->
+  <div class="upload-card" id="upload-card">
+    <input type="file" id="ical-input" accept=".ics" onchange="handleFile(this)">
+    <div class="upload-icon">📅</div>
+    <div class="upload-title">Upload NurseGrid Schedule</div>
+    <div class="upload-sub">Drag & drop or click to select your <strong>.ics file</strong> from NurseGrid</div>
+  </div>
+
+  <!-- Status -->
+  <div class="status-bar" id="status-bar"></div>
+
+  <!-- Shifts section -->
+  <div class="shifts-section" id="shifts-section">
+    <div class="section-head">
+      <div class="section-title" id="shifts-title">Imported Shifts</div>
+      <div class="action-row">
+        <button class="btn btn-secondary" onclick="copyToClipboard()">📋 Copy for Sheet</button>
+        <button class="btn btn-primary" onclick="document.getElementById('ical-input').click()">↑ Upload New</button>
+      </div>
+    </div>
+    <div id="weeks-container"></div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+// ── Config ──────────────────────────────────────────────
+const SHEET_URL = 'YOUR_GOOGLE_SHEET_URL'; // ← paste your sheet URL here
+
+let shifts = []; // parsed from ical
+let affirmed = {}; // { 'weekKey': true/false }
+
+// Load saved state
+try {
+  const saved = JSON.parse(localStorage.getItem('fd_simple') || '{}');
+  if (saved.rate) document.getElementById('rate-input').value = saved.rate;
+  if (saved.affirmed) affirmed = saved.affirmed;
+  if (saved.sheetUrl && saved.sheetUrl !== 'YOUR_GOOGLE_SHEET_URL') {
+    document.getElementById('sheet-link').href = saved.sheetUrl;
+  }
+  if (saved.shifts && saved.shifts.length) {
+    shifts = saved.shifts;
+    renderShifts();
+  }
+} catch(e) {}
+
+// Set sheet link
+if (SHEET_URL !== 'YOUR_GOOGLE_SHEET_URL') {
+  document.getElementById('sheet-link').href = SHEET_URL;
+}
+
+function save() {
+  const rate = parseFloat(document.getElementById('rate-input').value) || 15;
+  localStorage.setItem('fd_simple', JSON.stringify({ rate, affirmed, shifts, sheetUrl: SHEET_URL }));
+}
+
+document.getElementById('rate-input').addEventListener('input', () => {
+  save();
+  renderShifts();
+  updateCards();
+});
+
+// ── iCal parse ──────────────────────────────────────────
+function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  showStatus('Parsing schedule...', 'info');
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      shifts = parseICal(e.target.result);
+      if (!shifts.length) { showStatus('No shifts found in file.', 'error'); return; }
+      showStatus(`✓ Imported ${shifts.length} nanny shift days`, 'success');
+      save();
+      renderShifts();
+      updateCards();
+    } catch(err) {
+      showStatus('Error reading file: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+function parseICal(text) {
+  const NANNY_START = '10:30';
+  const NANNY_END   = '18:00';
+  const results = [];
+  const blocks = text.split('BEGIN:VEVENT').slice(1);
+
+  blocks.forEach(block => {
+    const dtStart = block.match(/DTSTART[^:]*:(\d{8}T?\d{0,6})/)?.[1];
+    if (!dtStart) return;
+
+    const y = dtStart.slice(0,4), mo = dtStart.slice(4,6), d = dtStart.slice(6,8);
+    const date = `${y}-${mo}-${d}`;
+    const dow = new Date(`${y}-${mo}-${d}T12:00:00`).getDay();
+    if (dow === 0 || dow === 6) return; // skip weekends
+
+    // Parse times if present in ical
+    let start = NANNY_START, end = NANNY_END;
+    if (dtStart.length > 8) {
+      start = `${dtStart.slice(9,11)}:${dtStart.slice(11,13)}`;
+    }
+    const dtEnd = block.match(/DTEND[^:]*:(\d{8}T?\d{0,6})/)?.[1];
+    if (dtEnd && dtEnd.length > 8) {
+      end = `${dtEnd.slice(9,11)}:${dtEnd.slice(11,13)}`;
+    }
+
+    // Override with nanny defaults (nurse schedule times don't apply to nanny)
+    start = NANNY_START;
+    end   = NANNY_END;
+
+    const hrs = calcHrs(start, end);
+    results.push({ date, start, end, hrs });
+  });
+
+  // Sort by date, deduplicate
+  const seen = new Set();
+  return results.filter(s => {
+    if (seen.has(s.date)) return false;
+    seen.add(s.date);
+    return true;
+  }).sort((a,b) => a.date.localeCompare(b.date));
+}
+
+function calcHrs(start, end) {
+  const [sh,sm] = start.split(':').map(Number);
+  const [eh,em] = end.split(':').map(Number);
+  return (eh + em/60) - (sh + sm/60);
+}
+
+function to12h(t) {
+  if (!t) return '';
+  const [h,m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  return `${h%12||12}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+
+function fmtDate(ds) {
+  const [y,mo,d] = ds.split('-');
+  return new Date(y, mo-1, d).toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+}
+
+function weekKey(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const dow = d.getDay();
+  const mon = new Date(d);
+  mon.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
+  return mon.toISOString().slice(0,10);
+}
+
+function fmtWeekLabel(wk) {
+  const [y,mo,d] = wk.split('-');
+  const mon = new Date(y, mo-1, d);
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+  const fmt = dt => dt.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  return `Week of ${fmt(mon)} – ${fmt(sun)}`;
+}
+
+function getRate() { return parseFloat(document.getElementById('rate-input').value) || 15; }
+
+// ── Render ──────────────────────────────────────────────
+function renderShifts() {
+  const container = document.getElementById('weeks-container');
+  container.innerHTML = '';
+  document.getElementById('shifts-section').classList.add('visible');
+
+  // Group by week
+  const weeks = {};
+  shifts.forEach(s => {
+    const wk = weekKey(s.date);
+    if (!weeks[wk]) weeks[wk] = [];
+    weeks[wk].push(s);
+  });
+
+  const RATE = getRate();
+  const now = new Date();
+  const todayWk = weekKey(now.toISOString().slice(0,10));
+
+  Object.keys(weeks).sort().forEach(wk => {
+    const wkShifts = weeks[wk];
+    const totalHrs = wkShifts.reduce((s,x) => s + x.hrs, 0);
+    const totalPay = totalHrs * RATE;
+    const isAffirmed = affirmed[wk] || false;
+    const isPast = wk < todayWk;
+    const isCurrent = wk === todayWk;
+
+    const div = document.createElement('div');
+    div.className = 'week-group';
+
+    div.innerHTML = `
+      <div class="week-header">
+        <span class="week-title">${fmtWeekLabel(wk)}${isCurrent ? ' 📍' : ''}</span>
+        <div class="week-meta">
+          <span class="week-hrs">${totalHrs.toFixed(1)} hrs</span>
+          <span class="week-pay">$${totalPay.toFixed(2)}</span>
+          <label class="week-affirm ${isAffirmed ? 'affirmed' : ''}" title="Check to affirm week is paid">
+            <input type="checkbox" ${isAffirmed ? 'checked' : ''} onchange="toggleAffirm('${wk}', this)">
+            ${isAffirmed ? '✓ Paid' : 'Mark Paid'}
+          </label>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Hours</th>
+            <th>Pay</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${wkShifts.map(s => `
+            <tr>
+              <td>${fmtDate(s.date)}</td>
+              <td>${to12h(s.start)}</td>
+              <td>${to12h(s.end)}</td>
+              <td><span class="hrs-badge">${s.hrs.toFixed(1)}h</span></td>
+              <td class="pay-val">$${(s.hrs * RATE).toFixed(2)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+    container.appendChild(div);
+  });
+
+  document.getElementById('shifts-title').textContent =
+    `${shifts.length} Nanny Shift Days Imported`;
+
+  updateCards();
+}
+
+function toggleAffirm(wk, cb) {
+  affirmed[wk] = cb.checked;
+  save();
+  // update label
+  const label = cb.closest('.week-affirm');
+  label.classList.toggle('affirmed', cb.checked);
+  label.childNodes[label.childNodes.length-1].textContent = cb.checked ? ' ✓ Paid' : ' Mark Paid';
+  updateCards();
+}
+
+// ── Summary cards ────────────────────────────────────────
+function updateCards() {
+  const RATE = getRate();
+  const now = new Date();
+  const todayWk = weekKey(now.toISOString().slice(0,10));
+  const prevWk = (() => {
+    const d = new Date(todayWk + 'T12:00:00');
+    d.setDate(d.getDate() - 7);
+    return d.toISOString().slice(0,10);
+  })();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+  let thisWkHrs = 0, lastWkHrs = 0, monthHrs = 0;
+
+  shifts.forEach(s => {
+    const wk = weekKey(s.date);
+    const mo = s.date.slice(0,7);
+    if (wk === todayWk) thisWkHrs += s.hrs;
+    if (wk === prevWk)  lastWkHrs += s.hrs;
+    if (mo === thisMonth) monthHrs += s.hrs;
+  });
+
+  document.getElementById('card-this-week').textContent = `$${(thisWkHrs * RATE).toFixed(2)}`;
+  document.getElementById('card-this-week-hrs').textContent = `${thisWkHrs.toFixed(1)} hrs scheduled`;
+  document.getElementById('card-last-week').textContent = `$${(lastWkHrs * RATE).toFixed(2)}`;
+  document.getElementById('card-last-week-hrs').textContent = `${lastWkHrs.toFixed(1)} hrs worked`;
+  document.getElementById('card-month').textContent = `$${(monthHrs * RATE).toFixed(2)}`;
+  document.getElementById('card-month-hrs').textContent = `${monthHrs.toFixed(1)} hrs this month`;
+}
+
+// ── Copy for Sheet ───────────────────────────────────────
+function copyToClipboard() {
+  if (!shifts.length) { showToast('No shifts to copy', 'err'); return; }
+  const RATE = getRate();
+  const todayWk = weekKey(new Date().toISOString().slice(0,10));
+  const rows = [['Date','Month','Week Of','Start','End','Hours','Paid','Weekly Pay','Notes']];
+
+  // Track weekly pay — only show on first row of each week
+  const weeks = {};
+  shifts.forEach(s => {
+    const wk = weekKey(s.date);
+    if (!weeks[wk]) weeks[wk] = [];
+    weeks[wk].push(s);
+  });
+
+  const weekPay = {};
+  Object.entries(weeks).forEach(([wk, ss]) => {
+    weekPay[wk] = ss.reduce((t,s) => t + s.hrs, 0) * RATE;
+  });
+
+  let lastWk = null;
+  shifts.forEach(s => {
+    const wk = weekKey(s.date);
+    const [y,mo,d] = s.date.split('-');
+    const dt = new Date(y, mo-1, d);
+    const month = dt.toLocaleDateString('en-US', {month:'short', year:'numeric'});
+    const monDate = new Date(wk + 'T12:00:00');
+    const weekLabel = monDate.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+    const pay = wk !== lastWk ? weekPay[wk].toFixed(2) : '';
+    const paid = affirmed[wk] ? 'TRUE' : 'FALSE';
+    rows.push([s.date, month, weekLabel, to12h(s.start), to12h(s.end), s.hrs.toFixed(2), paid, pay ? '$'+pay : '', '']);
+    lastWk = wk;
+  });
+
+  const tsv = rows.map(r => r.join('\t')).join('\n');
+  navigator.clipboard.writeText(tsv).then(() => {
+    showToast('Copied! Paste into your Google Sheet (Ctrl+V / Cmd+V)', 'ok');
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = tsv;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('Copied! Paste into your Google Sheet', 'ok');
+  });
+}
+
+// ── Drag & drop ──────────────────────────────────────────
+const uploadCard = document.getElementById('upload-card');
+uploadCard.addEventListener('dragover', e => { e.preventDefault(); uploadCard.classList.add('drag'); });
+uploadCard.addEventListener('dragleave', () => uploadCard.classList.remove('drag'));
+uploadCard.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadCard.classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    document.getElementById('ical-input').files = dt.files;
+    handleFile(document.getElementById('ical-input'));
+  }
+});
+
+// ── Helpers ──────────────────────────────────────────────
+function showStatus(msg, type) {
+  const el = document.getElementById('status-bar');
+  el.textContent = msg;
+  el.className = 'status-bar ' + type;
+  setTimeout(() => el.className = 'status-bar', 4000);
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+// Init cards
+updateCards();
+</script>
+</body>
+</html>
